@@ -1,0 +1,104 @@
+version: '3'
+
+services:
+  vpn:
+    image: ghcr.io/jsiebens/ionscale:0.16.0
+    container_name: ionscale-vpn
+    volumes:
+      - ./ionscale/config.yaml:/etc/ionscale/config.yaml
+      - ./ionscale/data:/data
+    hostname: 'ionscale-vpn'
+    restart: unless-stopped
+    command: "server --config /etc/ionscale/config.yaml"
+    networks:
+      vpn:
+        ipv4_address: 10.18.10.2
+    ports:
+      - 443:443
+      - 3478:3478/udp
+
+  warp:
+    depends_on:
+      - vpn
+    image: ionscale_warp
+    container_name: ionscale-warp
+    build:
+      dockerfile: ./warp/warp.Dockerfile
+    hostname: warp-exit-node
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.src_valid_mark=1
+    privileged: true
+    volumes:
+      - ./warp/tailscale:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-fsS",
+          "--connect-timeout",
+          "1",
+          "--max-time 3",
+          "https://cloudflare.com/cdn-cgi/trace",
+          "|",
+          "grep",
+          "-qE",
+          "warp=(plus|on)",
+          "||",
+          "exit",
+          "1"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    environment:
+      - PUBLIC_ADDR= # public address in public_addr 
+      - WARP_LICENSE_KEY= # License key for Warp+ (not required)
+    networks:
+      vpn:
+        ipv4_address: 10.18.10.3
+
+  nord:
+    depends_on:
+      - vpn
+    image: ionscale_nord
+    container_name: ionscale-nord
+    build:
+      dockerfile: ./nord/nord.Dockerfile
+    hostname: nord-exit-node
+    devices:
+      - /dev/net/tun
+    volumes:
+      - ./nord/tailscale:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - net_raw
+      - sys_module
+    restart: unless-stopped
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    tty: true
+    privileged: true
+    environment:
+      - PUBLIC_ADDR= # public address in public_addr 
+    networks:
+      vpn:
+        ipv4_address: 10.18.10.4
+
+networks:
+  vpn:
+    name: ionscale-net
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.18.0.0/16
+          gateway: 10.18.10.1

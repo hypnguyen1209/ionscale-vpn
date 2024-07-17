@@ -1,0 +1,8 @@
+.vscode
+.idea
+*.log
+
+ionscale.db*
+config.yaml
+tailscale/*
+data/*

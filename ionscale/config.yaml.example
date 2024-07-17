@@ -1,0 +1,16 @@
+listen_addr: ":443"
+public_addr: "ionscale.example.com:443"
+stun_public_addr: "ionscale.example.com:3478"
+
+tls:
+  acme: true
+  acme_email: "example@ionscale.com"
+
+keys:
+  system_admin_key: "sha256(randomstring)"
+
+database:
+  url: "/data/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
+
+logging:
+  level: info

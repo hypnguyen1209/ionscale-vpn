@@ -91,7 +91,7 @@ function machine_exec() {
         local tailnetName=$2
         if  [ -z "$tailnetName" ]; then
                 echo "$0 $machine_opt {Tailnet Name}"
-                 exit 1
+                exit 1
         fi
         ion_auth_exec "machines list --tailnet $tailnetName"
     ;;

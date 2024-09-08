@@ -82,6 +82,7 @@ function machine_exec() {
     get)
         if  [ -z "$2" ]; then
                 echo "$0 $machine_opt {machine-id}"
+                exit 1
         fi
         local uid=$2
         ion_auth_exec "machines get --machine-id $uid"
@@ -90,6 +91,7 @@ function machine_exec() {
         local tailnetName=$2
         if  [ -z "$tailnetName" ]; then
                 echo "$0 $machine_opt {Tailnet Name}"
+                 exit 1
         fi
         ion_auth_exec "machines list --tailnet $tailnetName"
     ;;
@@ -97,6 +99,7 @@ function machine_exec() {
         local id=$2
         if [ -z "$id" ]; then
                 echo "$0 $machine_opt {machine-id}"
+                exit 1
         fi
         ion_auth_exec "machines delete --machine-id $id"
     ;;

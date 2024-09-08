@@ -75,6 +75,36 @@ function auth_key_exec() {
         ;;
     esac
 }
+function machine_exec() {
+    local args=("$@")
+    local machine_opt=$1
+    case "$machine_opt" in
+    get)
+        if  [ -z "$2" ]; then
+                echo "$0 $machine_opt {machine-id}"
+        fi
+        local uid=$2
+        ion_auth_exec "machines get --machine-id $uid"
+    ;;
+    list)
+        local tailnetName=$2
+        if  [ -z "$tailnetName" ]; then
+                echo "$0 $machine_opt {Tailnet Name}"
+        fi
+        ion_auth_exec "machines list --tailnet $tailnetName"
+    ;;
+    delete)
+        local id=$2
+        if [ -z "$id" ]; then
+                echo "$0 $machine_opt {machine-id}"
+        fi
+        ion_auth_exec "machines delete --machine-id $id"
+    ;;
+*)
+    exit 1
+    ;;
+    esac
+}
 
 case "$1" in
 init)
@@ -101,8 +131,16 @@ enable_exit_node)
     fi
     enable_exit_node_exec "${@:2}"
     ;;
+machine)
+    if [ -z "$2" ]; then
+        echo "$0 $1 {get|list|delete} {machine-id}"
+        exit 1
+    fi
+    machine_exec "${@:2}"
+    ;;
 *)
-    echo "Usage: $0 {tailnet|auth|enable_exit_node}"
+    echo "Usage: $0 {tailnet|auth|enable_exit_node|machine}"
     exit 1
     ;;
+
 esac
